@@ -1,21 +1,27 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import './App.css'
-import Home from './pages/home'
-import About from './pages/about'
-import Contact from './pages/contact'
-import Header from './components/header'
-import Footer from './components/footer'
+import Home from './pages/Home'
+import About from './pages/About'
+import Contact from './pages/Contact'
+import Header from './components/Header'
+import Footer from './components/Footer'
+import Login from './pages/Login'
+import Signup from './pages/Signup'
 
 function App() {
   return (
     <Router>
-      gitHeader
+      <Header/>
+      
+
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
       </Routes>
-      <Footer />
+      <Footer/>
     </Router>
   )
 }
