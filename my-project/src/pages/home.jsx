@@ -12,17 +12,63 @@ const Home = () => {
 
   useEffect(() => {
     const userEmail = localStorage.getItem("email");
+    const token = localStorage.getItem("access_token");
+
     if (userEmail) {
       const emailKey = userEmail.toLowerCase().replace(/[@.]/g, "_");
       setUserPlan(localStorage.getItem(`user_plan_${emailKey}`) || "Free");
       setMessagesSent(parseInt(localStorage.getItem(`total_messages_sent_${emailKey}`) || "0"));
 
-      const savedMessages = localStorage.getItem(`chat_messages_${emailKey}`);
-      if (savedMessages) {
-        setMessages(JSON.parse(savedMessages));
+      // Try fetching from backend first if token exists
+      if (token) {
+        fetchHistory(token);
+      } else {
+        const savedMessages = localStorage.getItem(`chat_messages_${emailKey}`);
+        if (savedMessages) {
+          setMessages(JSON.parse(savedMessages));
+        }
       }
     }
   }, []);
+
+  const fetchHistory = async (token) => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/history", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const formattedMessages = data.messages.map(m => ({
+          role: m.role,
+          content: m.content
+        }));
+        setMessages(formattedMessages);
+
+        // Also update local storage for fallback
+        const userEmail = localStorage.getItem("email");
+        if (userEmail) {
+          const emailKey = userEmail.toLowerCase().replace(/[@.]/g, "_");
+          localStorage.setItem(`chat_messages_${emailKey}`, JSON.stringify(formattedMessages));
+        }
+      } else if (response.status === 401) {
+        // Token expired or invalid
+        console.error("Session expired. Please log in again.");
+      }
+    } catch (error) {
+      console.error("Error fetching history:", error);
+      // Fallback to local storage if backend fails
+      const userEmail = localStorage.getItem("email");
+      if (userEmail) {
+        const emailKey = userEmail.toLowerCase().replace(/[@.]/g, "_");
+        const savedMessages = localStorage.getItem(`chat_messages_${emailKey}`);
+        if (savedMessages) {
+          setMessages(JSON.parse(savedMessages));
+        }
+      }
+    }
+  };
 
   const isLimitReached = userPlan === "Free" && messagesSent >= FREE_LIMIT;
 
@@ -53,6 +99,12 @@ const Home = () => {
     if (e) e.preventDefault();
     if (!input.trim() || isLoading) return;
 
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      alert("Please log in to send messages.");
+      return;
+    }
+
     if (isLimitReached) {
       alert("Free limit reached! Please upgrade to Pro for more messages.");
       return;
@@ -66,7 +118,10 @@ const Home = () => {
     try {
       const response = await fetch("http://127.0.0.1:8000/ask", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           message: input,
           system_prompt: "You are a helpful assistant.",
@@ -93,6 +148,8 @@ const Home = () => {
         const newTotalMessagesSent = messagesSent + 1;
         setMessagesSent(newTotalMessagesSent);
         localStorage.setItem(`total_messages_sent_${emailKey}`, newTotalMessagesSent.toString());
+      } else if (response.status === 401) {
+        alert("Session expired. Please log in again.");
       } else {
         const errorData = await response.json().catch(() => ({}));
         setMessages((prev) => [
