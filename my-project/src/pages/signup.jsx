@@ -23,7 +23,7 @@ const Signup = () => {
         setError('');
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/signup', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/signup`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -109,8 +109,8 @@ const Signup = () => {
                             type="submit"
                             disabled={isLoading}
                             className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95 ${isLoading
-                                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                                    : 'bg-linear-to-r from-brand-primary to-brand-secondary text-white hover:scale-[1.02]'
+                                ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                                : 'bg-linear-to-r from-brand-primary to-brand-secondary text-white hover:scale-[1.02]'
                                 }`}
                         >
                             {isLoading ? 'Processing...' : 'Deploy Identity'}

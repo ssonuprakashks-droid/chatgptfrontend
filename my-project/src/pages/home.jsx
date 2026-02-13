@@ -33,7 +33,7 @@ const Home = () => {
 
   const fetchHistory = async (token) => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/history", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/history`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -116,7 +116,7 @@ const Home = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/ask", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/ask`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
